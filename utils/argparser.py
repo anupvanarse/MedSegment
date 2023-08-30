@@ -27,7 +27,7 @@ import settings    # Use the custom settings.py file for default parameters
 import os
 
 parser = argparse.ArgumentParser(
-    description="2D U-Net model (Keras/TF) on BraTS Decathlon dataset.",
+    description="2D U-Net model (Keras-Core) on BraTS Decathlon dataset.",
     add_help=True, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--data_path", default=settings.DATA_PATH,
@@ -93,5 +93,3 @@ parser.add_argument("--input_filename",
                     default=os.path.join(settings.OUT_PATH,settings.INFERENCE_FILENAME))
 
 args = parser.parse_args()
-
-

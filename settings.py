@@ -20,7 +20,7 @@
 import psutil
 import os
 
-DATA_PATH=os.path.join("/data/medical_decathlon/Task01_BrainTumour")
+DATA_PATH=os.path.join("/mnt/datasets/medical_decathlon/Task01_BrainTumour")
 OUT_PATH = os.path.join("./output/")
 INFERENCE_FILENAME = "2d_unet_decathlon"
 
