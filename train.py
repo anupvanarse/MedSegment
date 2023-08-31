@@ -3,11 +3,11 @@ import os
 import argparse
 import tensorflow as tf  # conda install -c anaconda tensorflow
 import settings   # Use the custom settings.py file for default parameters
-
 from utils.dataloader import DatasetGenerator, get_decathlon_filelist
-
 import numpy as np
 
+DATA_PATH=os.path.join("/mnt/datasets/medical_decathlon/Task01_BrainTumour")
+OUT_PATH = os.path.join("./output/")
 
 if __name__ == "__main__":
     """
@@ -20,67 +20,51 @@ if __name__ == "__main__":
     description="2D U-Net model (Keras-Core) on BraTS Decathlon dataset.",
     add_help=True, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("--data_path", default=settings.DATA_PATH,
+    parser.add_argument("-d","--data_path", default=DATA_PATH,
                         help="The path to the Medical Decathlon directory")
-    parser.add_argument("--output_path", default=settings.OUT_PATH,
+    parser.add_argument("-o","--output_path", default=OUT_PATH,
                         help="the folder to save the model and checkpoints")
-    parser.add_argument("--inference_filename", default=settings.INFERENCE_FILENAME,
-                        help="the Keras inference model filename")
-    parser.add_argument("--use_upsampling",
+    parser.add_argument("--use_upsampling", type=bool,
                         help="use upsampling instead of transposed convolution",
-                        action="store_true", default=settings.USE_UPSAMPLING)
-    parser.add_argument("--num_threads", type=int,
-                        default=settings.NUM_INTRA_THREADS,
-                        help="the number of threads")
-    parser.add_argument("--num_inter_threads", type=int,
-                        default=settings.NUM_INTER_THREADS,
-                        help="the number of intraop threads")
-    parser.add_argument("--batch_size", type=int, default=settings.BATCH_SIZE,
+                        action="store_true", default=False)
+    parser.add_argument("--batch_size", type=int, default=128,
                         help="the batch size for training")
-    parser.add_argument("--split", type=float, default=settings.TRAIN_TEST_SPLIT,
+    parser.add_argument("-s","--split", type=float, default=0.80,
                         help="Train/testing split for the data")
-    parser.add_argument("--seed", type=int, default=settings.SEED,
-                        help="Seed for random number generation")
-    parser.add_argument("--crop_dim", type=int, default=settings.CROP_DIM,
+    parser.add_argument("--crop_dim", type=int, default=128,
                         help="Size to crop images (square, in pixels). If -1, then no cropping.")
-    parser.add_argument("--blocktime", type=int,
-                        default=settings.BLOCKTIME,
-                        help="blocktime")
-    parser.add_argument("--epochs", type=int,
-                        default=settings.EPOCHS,
+    parser.add_argument("-e","--epochs", type=int, default=30,
                         help="number of epochs to train")
-    parser.add_argument("--learningrate", type=float,
-                        default=settings.LEARNING_RATE,
+    parser.add_argument("-lr","--learningrate", type=float,
+                        default=1e-4,
                         help="learningrate")
     parser.add_argument("--weight_dice_loss", type=float,
-                        default=settings.WEIGHT_DICE_LOSS,
+                        default=0.85,
                         help="Weight for the Dice loss compared to crossentropy")
     parser.add_argument("--featuremaps", type=int,
-                        default=settings.FEATURE_MAPS,
+                        default=16,
                         help="How many feature maps in the model.")
     parser.add_argument("--use_pconv", help="use partial convolution based padding",
                         action="store_true",
-                        default=settings.USE_PCONV)
+                        default=False)
     parser.add_argument("--channels_first", help="use channels first data format",
-                        action="store_true", default=settings.CHANNELS_FIRST)
+                        action="store_true", default=False)
     parser.add_argument("--print_model", help="print the model",
                         action="store_true",
-                        default=settings.PRINT_MODEL)
+                        default=True)
     parser.add_argument("--use_dropout",
-                        default=settings.USE_DROPOUT,
+                        default=True,
                         help="add spatial dropout layers 3/4",
-                        action="store_true",
-                        )
+                        action="store_true")
     parser.add_argument("--use_augmentation",
-                        default=settings.USE_AUGMENTATION,
+                        default=True,
                         help="use data augmentation on training images",
                         action="store_true")
     parser.add_argument("--output_pngs",
                         default="inference_examples",
                         help="the directory for the output prediction pngs")
     parser.add_argument("--input_filename",
-                        help="Name of saved TensorFlow model directory",
-                        default=os.path.join(settings.OUT_PATH,settings.INFERENCE_FILENAME))
+                        help="Name of saved TensorFlow model directory")
 
     args = parser.parse_args()
 
@@ -93,9 +77,17 @@ if __name__ == "__main__":
 
     trainFiles, validateFiles, testFiles = get_decathlon_filelist(data_path=args.data_path, seed=args.seed, split=args.split)
 
-    ds_train = DatasetGenerator(trainFiles, batch_size=args.batch_size, crop_dim=[args.crop_dim,args.crop_dim], augment=True, seed=args.seed)
-    ds_validation = DatasetGenerator(validateFiles, batch_size=args.batch_size, crop_dim=[args.crop_dim,args.crop_dim], augment=False, seed=args.seed)
-    ds_test = DatasetGenerator(testFiles, batch_size=args.batch_size, crop_dim=[args.crop_dim,args.crop_dim], augment=False, seed=args.seed)
+    ds_train = DatasetGenerator(trainFiles, batch_size=args.batch_size, 
+                                crop_dim=[args.crop_dim,args.crop_dim], 
+                                augment=True, seed=args.seed)
+    
+    ds_validation = DatasetGenerator(validateFiles, batch_size=args.batch_size, 
+                                     crop_dim=[args.crop_dim,args.crop_dim], 
+                                     augment=False, seed=args.seed)
+    
+    ds_test = DatasetGenerator(testFiles, batch_size=args.batch_size, 
+                               crop_dim=[args.crop_dim,args.crop_dim], 
+                               augment=False, seed=args.seed)
 
     print("-" * 30)
     print("Creating and compiling model ...")
@@ -143,17 +135,3 @@ if __name__ == "__main__":
     print("-" * 30)
 
     unet_model.evaluate_model(model_filename, ds_test)
-
-    """
-    Step 6: Print the command to convert TensorFlow model into OpenVINO format with model optimizer.
-    """
-    # print("-" * 30)
-    # print("-" * 30)
-    # unet_model.print_openvino_mo_command(
-    #     model_filename, ds_test.get_input_shape())
-
-    # print(
-    #     "Total time elapsed for program = {} seconds".format(
-    #         datetime.datetime.now() -
-    #         START_TIME))
-    # print("Stopped script on {}".format(datetime.datetime.now()))
