@@ -1,4 +1,4 @@
 # MedSegment
 Medical segmentation models using Keras-core APIs
 
-A detailed Readme will soon be updated
+A detailed readme will soon be updated
