@@ -1,0 +1,4 @@
+# Default ignored files
+./_pycache_/
+./.idea/
+./output/

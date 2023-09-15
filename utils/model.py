@@ -23,7 +23,7 @@ This module contains all of the model definition code.
 You can try custom models by modifying the code here.
 """
 
-import settings
+import utils.settings as settings
 import os
 import time
 import shutil

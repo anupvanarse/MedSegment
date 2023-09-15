@@ -23,7 +23,7 @@ This module just reads parameters from the command line.
 """
 
 import argparse
-import settings    # Use the custom settings.py file for default parameters
+import utils.settings as settings    # Use the custom settings.py file for default parameters
 import os
 
 parser = argparse.ArgumentParser(
